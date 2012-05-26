@@ -1,5 +1,10 @@
+module Main where
+
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Array.Unboxed as A
+import Control.Concurrent
+import Control.Monad (forever, when)
+import Graphics.UI.SDL as SDL
 import Control.Monad (forM_)
 
 type Binary = [Int]
@@ -63,3 +68,35 @@ printGrid g = do
     let bs@((x0,y0), (x,y)) = A.bounds g
     forM_ [y0..y] $ \j -> do
         print $ concatMap (\i -> show $ g A.! (i,j)) [x0..x]
+
+drawWorld screen g = do    
+    let (_, (n,_)) = A.bounds g
+    sequence [ drawSquare screen n i j | i <- [0..n - 1], j <- [0..n - 1] ] 
+    SDL.flip screen
+        where drawSquare s n i j = do
+                let s = g A.! (i,j)
+                let color 1 = 0x000000
+                    color _ = 0xFFFFFF
+                    sSize = screen_size `div` n
+                    rect i j = Just $ Rect (i*sSize) (j*sSize) sSize sSize
+                SDL.fillRect screen (rect i j) (SDL.Pixel $ color s)
+                return ()
+
+automata_rules = conway -- V.// [(27, 1)]
+
+upShowWorld s g = do
+    drawWorld s g
+    let ng = updateGrid g automata_rules
+    threadDelay 100000
+    upShowWorld s ng
+
+screen_size = 420
+
+main = do
+    SDL.init [InitEverything]
+    setVideoMode screen_size screen_size 32 []
+    screen <- SDL.getVideoSurface
+    let g = mkGlider (mkGlider (mkGlider (grid 30) (10, 10)) (13,13)) (15,15)
+    forkIO . forever $ waitEvent >>= \e -> when (e == Quit) quit
+    upShowWorld screen g
+
