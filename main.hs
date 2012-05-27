@@ -2,6 +2,7 @@ module Main where
 
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Array.Unboxed as A
+import System.Random
 import Control.Concurrent
 import Control.Monad (forever, when)
 import Graphics.UI.SDL as SDL
@@ -82,21 +83,36 @@ drawWorld screen g = do
                 SDL.fillRect screen (rect i j) (SDL.Pixel $ color s)
                 return ()
 
-automata_rules = conway -- V.// [(27, 1)]
+fib = 1 : 1 : zipWith (+) fib (tail fib)
 
-upShowWorld s g = do
+some_fibs = takeWhile (<= 513) fib
+
+--zero = V.fromList $ take 513 $ repeat 0
+
+--automata_rules = zero V.// (map (\x -> (,) x 1) $ map ((`mod` 513).(+111)) $ some_fibs)
+
+
+-- automata_rules = zero V.// (map (\x -> (,) x 1) $ map ((`mod` 513).(+11)) $  some_fibs)
+
+--automata_rules = zero V.// (map (\x -> (,) x 1) $ map ((`mod` 513).(+3)) $  some_fibs)
+
+--V.// [(27, 1), (28, 1), (64,1), (128,1)]
+
+upShowWorld s g ar = do
     drawWorld s g
-    let ng = updateGrid g automata_rules
-    threadDelay 100000
-    upShowWorld s ng
+    let ng = updateGrid g ar
+--    threadDelay 10000
+    upShowWorld s ng ar
 
-screen_size = 420
+screen_size = 800
 
 main = do
     SDL.init [InitEverything]
+    seed <- newStdGen
     setVideoMode screen_size screen_size 32 []
+    let ar = V.fromList $ map (`mod` 2) $ take 513 $ randoms seed :: V.Vector Int 
     screen <- SDL.getVideoSurface
-    let g = mkGlider (mkGlider (mkGlider (grid 30) (10, 10)) (13,13)) (15,15)
+    let g = mkGlider(mkGlider(mkGlider (mkGlider (mkGlider (grid 400) (10, 10)) (13,13)) (15,15)) (100,100)) (102,102)
     forkIO . forever $ waitEvent >>= \e -> when (e == Quit) quit
-    upShowWorld screen g
+    upShowWorld screen g ar
 
