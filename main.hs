@@ -138,9 +138,9 @@ drawWorld screen g = do
 --fib = 1 : 1 : zipWith (+) fib (tail fib)
 --
 --some_fibs = takeWhile (<= 513) fib
---
-----zero = V.fromList $ take 513 $ repeat 0
---
+
+zero = V.fromList $ take 513 $ repeat 0 :: V.Vector Int
+
 ----automata_rules = zero V.// (map (\x -> (,) x 1) $ map ((`mod` 513).(+111)) $ some_fibs)
 --
 --
@@ -162,7 +162,9 @@ main = do
     SDL.init [InitEverything]
     seed <- newStdGen
     setVideoMode screen_size screen_size 32 []
-    let ar = V.fromList $ map (`mod` 2) $ take 513 $ randoms seed :: V.Vector Int 
+    let random_bits n = [(i,1) | i <- map ((+1).(`mod` 512)) $ take n $ randoms seed]
+    let ar = zero V.// random_bits 471 :: V.Vector Int 
+    print ar
 --    let ar = conway
     screen <- SDL.getVideoSurface
     g <- grid 200
@@ -173,18 +175,3 @@ main = do
     upShowWorld screen g ar
     SDL.quit
 
-eventLoop = SDL.waitEventBlocking >>= checkEvent
-checkEvent (SDL.KeyUp _) = return ()
-checkEvent (SDL.MouseMotion x y xr yr) = 
-    putStrLn ("MouseMotion X:" ++ show x ++ "  Y:" ++ show y ++
-              "  RX:" ++ show xr ++ "  RY:" ++ show yr)
-              >> eventLoop
-checkEvent (SDL.MouseButtonDown x y b) = 
-    putStrLn ("MouseBDown X:" ++ show x ++ "  Y:" ++ show y ++ 
-              "  B:" ++ show b)
-              >> eventLoop
-checkEvent (SDL.MouseButtonUp x y b) = 
-    putStrLn ("MouseBUp X:" ++ show x ++ "  Y:" ++ show y ++ 
-              "  B:" ++ show b)
-              >> eventLoop
-checkEvent _ = eventLoop
