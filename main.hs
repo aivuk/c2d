@@ -162,9 +162,8 @@ main = do
     SDL.init [InitEverything]
     seed <- newStdGen
     setVideoMode screen_size screen_size 32 []
-    let random_bits n = [(i,1) | i <- map ((+1).(`mod` 512)) $ take n $ randoms seed]
-    let ar = zero V.// random_bits 471 :: V.Vector Int 
-    print ar
+    --let random_bits n = [(i,1) | i <- map ((+1).(`mod` 512)) $ take n $ randoms seed]
+    --let ar = zero V.// random_bits 471 :: V.Vector Int 
 --    let ar = conway
     screen <- SDL.getVideoSurface
     g <- grid 200
@@ -172,6 +171,6 @@ main = do
 --    mkGlider g (7,7)
 --    let g = mkGlider(mkGlider(mkGlider (mkGlider (mkGlider (grid 400) (10, 10)) (13,13)) (15,15)) (100,100)) (102,102)
     forkIO . forever $ waitEvent >>= \e -> when (e == Quit) quit
-    upShowWorld screen g ar
+    upShowWorld screen g conway
     SDL.quit
 
